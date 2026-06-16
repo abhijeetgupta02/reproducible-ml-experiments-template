@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reproducible-ml-experiments-template"
+version = "0.0.1"
+description = "Template for reproducible ML experiments in Python"
+authors = [{name = "Abhijeet Gupta"}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24",
+  "scikit-learn>=1.4",
+  "omegaconf>=2.3",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-q"
