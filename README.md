@@ -8,6 +8,9 @@ A small, **working** template for reproducible ML experiments in Python: config
 management, per-run logging, a training loop, an evaluation loop, and a tiny
 example experiment that actually runs.
 
+> **Drop-in experiment backbone for papers and theses — configs, logging, and
+> evaluation wired for you.**
+
 > Status: ✅ Working template. The included example trains a small classifier on
 > a synthetic dataset and logs everything needed to reproduce the run. Fork it,
 > swap in your own data and model, and keep the structure.
@@ -29,6 +32,12 @@ drift apart. This template keeps them together by making three things cheap:
   fingerprint, metrics, and trained model into one timestamped folder.
 - **Deterministic by default** — one seed drives Python, NumPy (and PyTorch if
   you add it), and the data split, so the same config reproduces the same run.
+
+| Without this template | With this template |
+|-----------------------|---------------------------|
+| configs in notebooks  | configs in YAML           |
+| ad-hoc logs           | per-run folders           |
+| hard to reproduce     | single-seed, repeatable   |
 
 ## Repository layout
 
@@ -105,6 +114,22 @@ Each run writes a timestamped directory under `logs/runs/`:
 | `metrics.json` | Final train/val metrics plus full per-epoch `history` |
 | `eval_metrics.json` | Test accuracy and confusion matrix (written by `evaluate`) |
 | `model.joblib` | The trained model |
+
+The same layout as a tree:
+
+```text
+logs/runs/
+└── run_20260616_120000_000000/   # name = run_<UTC %Y%m%d_%H%M%S_%f>
+    ├── config.yaml         # exact, fully-resolved config for this run
+    ├── environment.json    # seed, Python version, platform, package versions
+    ├── metrics.json        # final train/val metrics + per-epoch history
+    ├── eval_metrics.json   # test accuracy + confusion matrix (from evaluate)
+    └── model.joblib        # the trained model
+```
+
+![Example run directory](docs/run_directory.png)
+
+*Regenerate with `python scripts/generate_run_dir_diagram.py`.*
 
 ### Schematic example (not real numbers)
 
