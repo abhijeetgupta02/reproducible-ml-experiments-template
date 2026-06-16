@@ -1,75 +1,152 @@
 # Reproducible ML Experiments Template
 
-Template for **reproducible ML experiments in Python** with config management, logging, evaluation scripts, and a sane directory structure.
+A small, **working** template for reproducible ML experiments in Python: config
+management, per-run logging, a training loop, an evaluation loop, and a tiny
+example experiment that actually runs.
 
-> Status: ✨ Planning / scaffolding — base template and example experiment to be added.
+> Status: ✅ Working template. The included example trains a small classifier on
+> a synthetic dataset and logs everything needed to reproduce the run. Fork it,
+> swap in your own data and model, and keep the structure.
 
-## Goals
+## Why this exists
 
-- Provide a **cookiecutter-style** starting point for ML research projects.
-- Make it easy to:
-  - Separate **config** from code.
-  - Log experiments in a **consistent, machine-readable** way.
-  - Run **reliable evaluations** and re-runs.
-- Encourage good practices (seed control, environment capture, etc.).
+Most "results" are hard to trust because the config, the code, and the numbers
+drift apart. This template keeps them together by making three things cheap:
 
-## Repository Layout (planned)
+- **Config-first design** — every value that affects a run lives in a
+  version-controlled YAML, never hard-coded.
+- **Self-contained run directories** — each run writes its config, environment
+  fingerprint, metrics, and trained model into one timestamped folder.
+- **Deterministic by default** — one seed drives Python, NumPy (and PyTorch if
+  you add it), and the data split, so the same config reproduces the same run.
+
+## Repository layout
 
 ```text
 reproducible-ml-experiments-template/
   configs/
-    experiment.yml      # Main experiment configuration
-    model.yml
-    data.yml
+    experiment.yml          # seed, data, model, logging — the single source of truth
   src/
-    project_name/
+    repro_template/
       __init__.py
-      data.py          # Data loading / preprocessing
-      models.py        # Model definitions / wrappers
-      train.py         # Training loop
-      evaluate.py      # Evaluation loop
-      utils.py         # Shared utilities (seeding, device setup, etc.)
+      data.py               # synthetic data + deterministic train/val/test split
+      models.py             # small MLP + epoch-by-epoch training loop
+      train.py              # training entry point (writes a run directory)
+      evaluate.py           # evaluation entry point (scores a run on the test set)
+      utils.py              # seeding, run dirs, JSON I/O, environment capture
   scripts/
     train.sh
     evaluate.sh
   logs/
-    runs/              # Per-run configs + metrics
+    runs/                   # one timestamped subdirectory per run (git-ignored)
   tests/
+    test_train_pipeline.py  # fast end-to-end smoke test
   pyproject.toml
   README.md
 ```
 
-## Tech Choices (planned)
-
-- **Config management:** Hydra or OmegaConf
-- **Logging:** Structured JSON logs + optional TensorBoard / Weights & Biases hooks
-- **Experiment tracking:** Simple run directories with configs + metrics
-
-## Example Experiment
-
-The template will include a minimal example experiment (e.g., small CV or RL task) to demonstrate:
-
-- How to structure configs
-- How to run `train` and `evaluate`
-- How logs and outputs are organized
-
-## Getting Started (planned)
-
-Once the template is in place, usage will roughly look like:
+## Quickstart
 
 ```bash
-# Copy or cookiecutter this repo
-cp -r reproducible-ml-experiments-template my-experiment
-cd my-experiment
+# 1. Install (editable, with test extras). A virtualenv is recommended.
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[test]"
 
-# Edit configs
-vim configs/experiment.yml
+# 2. Train using the default config.
+python -m repro_template.train --config configs/experiment.yml
+# (equivalently: scripts/train.sh)
 
-# Run training
-python -m project_name.train config=configs/experiment.yml
+# 3. Evaluate the most recent run on the held-out test set.
+python -m repro_template.evaluate --config configs/experiment.yml
+# (or evaluate a specific run: scripts/evaluate.sh run_YYYYMMDD_HHMMSS_ffffff)
 
-# Run evaluation
-python -m project_name.evaluate config=configs/experiment.yml
+# 4. Inspect the artifacts.
+ls logs/runs/                       # one folder per run
+cat logs/runs/run_*/metrics.json    # training metrics + per-epoch history
 ```
 
-If you want to suggest specific tools (e.g., your preferred logger, config library, or directory conventions), please open an issue.
+Two console scripts are also installed: `repro-train` and `repro-evaluate`.
+
+## What the example experiment does
+
+The example is intentionally minimal — it demonstrates the *template*, not a
+state-of-the-art result:
+
+- **Data:** scikit-learn's `make_classification` generates a synthetic binary
+  classification dataset (no downloads), split deterministically into
+  train / validation / test.
+- **Model:** a small `MLPClassifier`, trained one epoch at a time so the
+  training loop can record genuine per-epoch loss and accuracy.
+- **Evaluation:** the saved model is scored on the held-out test set, rebuilding
+  the *exact* split from the run's own saved config.
+
+Adapt it by editing `configs/experiment.yml` and replacing `load_dataset` /
+`build_mlp_classifier` with your own data and model. The training, logging, and
+evaluation plumbing stays the same.
+
+## What a run directory contains
+
+Each run writes a timestamped directory under `logs/runs/`:
+
+| File | Contents |
+|---|---|
+| `config.yaml` | Exact, fully-resolved config used for the run |
+| `environment.json` | Seed, Python version, platform, key package versions |
+| `metrics.json` | Final train/val metrics plus full per-epoch `history` |
+| `eval_metrics.json` | Test accuracy and confusion matrix (written by `evaluate`) |
+| `model.joblib` | The trained model |
+
+### Schematic example (not real numbers)
+
+The structure of `metrics.json` looks like the following. **These values are
+illustrative placeholders to show the schema — they are not measured results.**
+Run the code to get real numbers for your config.
+
+```json
+{
+  "epochs": 50,
+  "final_train_accuracy": 0.00,
+  "final_val_accuracy": 0.00,
+  "final_train_loss": 0.00,
+  "n_train": 0,
+  "n_val": 0,
+  "n_test": 0,
+  "history": [
+    {"epoch": 1, "train_loss": 0.00, "train_accuracy": 0.00, "val_accuracy": 0.00}
+  ]
+}
+```
+
+## Reproducibility notes
+
+- A single `seed` in the config drives all randomness (`utils.set_seed`).
+- The train/val/test split is stratified and seeded, so it is stable across runs.
+- `evaluate.py` reconstructs the data split from the run's saved `config.yaml`,
+  guaranteeing the test set matches what training held out.
+- The environment fingerprint records the versions that actually influence
+  results, so a run can be explained later.
+
+## Running the tests
+
+```bash
+pip install -e ".[test]"
+pytest
+```
+
+The suite runs a tiny train→evaluate pipeline (few samples, few epochs) and
+asserts that the expected artifacts are written. It is fast and uses a
+temporary directory, so it never pollutes `logs/`.
+
+## Using this as a template
+
+This is a starting point, not a framework — fork it and make it yours:
+
+- Replace the synthetic dataset in `data.py` with your loader (keep the
+  `DataSplits` contract and the rest of the pipeline is unchanged).
+- Swap the model in `models.py`; if you adopt PyTorch, `set_seed` already seeds
+  it when available.
+- Extend `configs/experiment.yml` with whatever your experiment needs — it is
+  the single place runs are parameterised.
+
+Dependencies are kept minimal on purpose: `numpy`, `scikit-learn`, `omegaconf`,
+and `joblib` (plus `pytest` for tests). Python 3.10+.

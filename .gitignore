@@ -1,4 +1,12 @@
 .venv/
 __pycache__/
 *.pyc
-logs/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# Run outputs: ignore everything under logs/ except the tracked directory stub.
+logs/**
+!logs/runs/
+!logs/runs/.gitkeep
