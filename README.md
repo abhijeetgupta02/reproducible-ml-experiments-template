@@ -1,5 +1,9 @@
 # Reproducible ML Experiments Template
 
+[![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Status](https://img.shields.io/badge/status-stable-brightgreen)](https://github.com/abhijeetgupta02/reproducible-ml-experiments-template)
+[![Maintainer](https://img.shields.io/badge/maintainer-Abhijeet%20Gupta-0e75b6)](https://github.com/abhijeetgupta02)
+
 A small, **working** template for reproducible ML experiments in Python: config
 management, per-run logging, a training loop, an evaluation loop, and a tiny
 example experiment that actually runs.
@@ -7,6 +11,12 @@ example experiment that actually runs.
 > Status: ✅ Working template. The included example trains a small classifier on
 > a synthetic dataset and logs everything needed to reproduce the run. Fork it,
 > swap in your own data and model, and keep the structure.
+
+## Why you might care
+
+- You are tired of **mystery results** with missing configs and one-off scripts.
+- You want a **drop-in experiment skeleton** for a paper, thesis, or benchmark.
+- You care that every run leaves behind a **self-contained, reproducible trace**.
 
 ## Why this exists
 
