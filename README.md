@@ -15,15 +15,13 @@ example experiment that actually runs.
 > a synthetic dataset and logs everything needed to reproduce the run. Fork it,
 > swap in your own data and model, and keep the structure.
 
-## Why you might care
+## 🚀 Why you might care
 
 - You are tired of **mystery results** with missing configs and one-off scripts.
 - You want a **drop-in experiment skeleton** for a paper, thesis, or benchmark.
 - You care that every run leaves behind a **self-contained, reproducible trace**.
 
-## Why this exists
-
-Most "results" are hard to trust because the config, the code, and the numbers
+Most “results” are hard to trust because the config, the code, and the numbers
 drift apart. This template keeps them together by making three things cheap:
 
 - **Config-first design** — every value that affects a run lives in a
